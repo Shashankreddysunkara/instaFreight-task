@@ -1,0 +1,16 @@
+---
+- hosts: jenkins_server, all_nodes, db_servers, ELK_server
+  become: yes
+  become_method: sudo
+  vars: 
+    keys_path: ./keys
+  tasks:        
+    - name: Copy filebeat.yml to node
+      copy:
+        src: ./filebeat.yml
+        dest: /home/ubuntu
+        mode: 0755
+
+    - name: Run filebeat installation
+      script:
+        cmd: ./filebeat.sh        

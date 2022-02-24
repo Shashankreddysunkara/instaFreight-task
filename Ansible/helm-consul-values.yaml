@@ -1,0 +1,16 @@
+# Choose an optional name for the datacenter
+global:
+  datacenter: "ops"
+  enabled: false
+
+client:
+  enabled: true
+  exposeGossipPorts: true
+  join: 
+    - "provider=aws tag_key=consul_server tag_value=true"
+
+syncCatalog:
+  enabled: true
+
+dns:
+  enabled: true

@@ -1,0 +1,26 @@
+---
+# tasks file for roles/ELK
+- name: Install basic ELK stack
+  script:
+    cmd: ./inst_elk.sh
+
+- name: Copy elasticsearch configs
+  copy:
+    src: ./elasticsearch.yml
+    dest: /etc/elasticsearch/
+  notify:
+    - Restart elasticsearch     
+
+- name: Copy kibana configs
+  copy:
+    src: ./kibana.yml 
+    dest: /etc/kibana/
+  notify:
+    - Restart kibana 
+
+- name: Copy logstash configs
+  copy:
+    src: ./logstash.conf
+    dest: /etc/logstash/conf.d/
+  notify:
+    - Restart logstash 

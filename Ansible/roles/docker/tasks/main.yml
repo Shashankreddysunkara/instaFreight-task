@@ -1,0 +1,79 @@
+---
+- name: Create docker group
+  group:
+    name: docker
+
+- name: Ensure old versions of Docker are not installed.
+  package:
+    name:
+      - docker
+      - docker-engine
+    state: absent
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Ensure dependencies are installed.
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg-agent
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker apt key.
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker repository.
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add the docker group to ubuntu
+  user:
+    name: ubuntu
+    append: yes
+    group: docker
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install version specific Docker on Ubuntu.
+  package:
+    name: 
+    - containerd.io
+    - "docker-ce={{ docker_ubuntu_version }}" 
+    - docker-ce-cli 
+    state: present
+  when: docker_ubuntu_version is defined and ansible_distribution == "Ubuntu"
+  notify: Restart docker
+
+- name: Install Docker.
+  package:
+    name: 
+    - containerd.io
+    - docker-ce 
+    - docker-ce-cli
+    state: present
+  when: docker_version is undefined
+  notify: Restart docker
+
+- name: Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure docker users are added to the docker group.
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items: "{{ docker_users }}"
+  when: docker_users | length > 0

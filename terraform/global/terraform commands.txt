@@ -1,0 +1,7 @@
+terraform init
+terraform validate
+terraform plan -out VPC_project.tfplan
+terraform apply "VPC_project.tfplan"
+terraform destroy
+
+ansible-playbook ../../../Ansible/jenkins_playbook.yml -i hosts.INI 

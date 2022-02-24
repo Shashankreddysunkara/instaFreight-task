@@ -1,0 +1,19 @@
+Host jumphost
+  HostName 52.53.225.170
+  User ubuntu
+  IdentityFile VPC-demo-key.pem
+  PasswordAuthentication no
+  ServerAliveInterval 60
+  TCPKeepAlive yes
+  ControlMaster auto
+  ControlPath /tmp/ansible-%r@%h:%p
+  ControlPersist 15m
+  StrictHostKeyChecking no
+  LogLevel QUIET
+
+Host 10.0.*
+  ProxyJump jumphost
+  StrictHostKeyChecking no
+
+
+

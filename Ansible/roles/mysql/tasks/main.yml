@@ -1,0 +1,82 @@
+---
+- name: Install the MySQL packages
+  apt:
+    name: 
+      - mysql-common
+      - mysql-server
+      - python3-mysqldb
+    state: present
+    update_cache: yes
+
+- name: Update MySQL root password for all root accounts 
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mysql_root_pass }}"
+    state: present
+  with_items:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Copy the templates to their respective destination
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root 
+    group: root 
+    mode: "{{ item.mode | default(644) }}"
+  with_items:
+    - { src: 'my.cnf.j2', dest: '/etc/mysql/my.cnf' }
+    - { src: 'root.cnf.j2', dest: '~/.my.cnf', mode: '600' }
+    - { src: 'mysqld_exporter.cnf.j2', dest: '/etc/.mysqld_exporter.cnf' }
+  notify:
+    - Restart MySQL
+
+- name: Ensure Anonymous user(s) are not in the database
+  mysql_user:
+    name: ''
+    host: "{{ item }}"
+    state: absent
+  with_items:
+    - localhost
+    - "{{ ansible_hostname }}"
+
+- name: Create phonebook app MySQL user
+  mysql_user:
+    name: phoneapp
+    host: "%"
+    password: "{{ mysql_app_pass }}"
+    state: present
+    priv: 'phonebook.*:ALL'
+
+- name: Create MySQL exporter user
+  mysql_user:
+    name: mysqld_exporter
+    host: "%"
+    password: "{{ mysqld_exporter_pass }}"
+    state: present
+    priv: '*.*:PROCESS,REPLICATION CLIENT,SELECT'
+
+- name: Copy database creation file
+  copy:
+    src: ./database/phonebook_db.sql
+    dest: /tmp
+
+- name: Create the phonebook database
+  mysql_db:
+    name: all
+    target: /tmp/phonebook_db.sql
+    state: import
+ 
+- name: Remove the test database
+  mysql_db:
+    name: test
+    state: absent
+  notify:
+    - Restart MySQL 
+
+- name: Install MySQL node exporter
+  script:
+    cmd: ./inst_mysql_exporter.sh

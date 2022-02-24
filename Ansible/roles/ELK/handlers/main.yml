@@ -1,0 +1,16 @@
+---
+# handlers file for roles/ELK
+- name: Restart elasticsearch
+  service:
+    name: elasticsearch
+    state: restarted
+
+- name: Restart kibana
+  service:
+    name: kibana
+    state: restarted
+
+- name: Restart logstash
+  service:
+    name: logstash
+    state: restarted
